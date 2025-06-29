@@ -1,0 +1,90 @@
+/*************************************************************
+ A simple code that allows for a garage door or gate to be opened
+from the users phone using the BlYNK app, some effort may be
+required to set up the BLYNK interface 
+(send a HIGH or LOW signal world wide)
+ESP32 must be connected to WiFi
+
+This code may need updating for personal needs/desires, it
+is a very basic stepping stone rather than a fuctional end
+product
+ *************************************************************/
+
+/* Fill-in information from Blynk Device Info here */
+#define BLYNK_TEMPLATE_ID "Your_Template_ID"
+#define BLYNK_TEMPLATE_NAME "Your_Template_Name"
+#define BLYNK_AUTH_TOKEN "Your_Auth_Token"
+
+/* Comment this out to disable prints and save space */
+#define BLYNK_PRINT Serial
+
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
+
+// Your WiFi credentials.
+// Set password to "" for open networks.
+char ssid[] = "WiFi Username";
+char pass[] = "WiFi Password";
+
+BlynkTimer timer;
+
+// This function sends Arduino's up time every second to Virtual Pin (5).
+// In the app, Widget's reading frequency should be set to PUSH. This means
+// that you define how often to send data to Blynk App.
+void myTimerEvent()
+{
+  // You can send any value at any time.
+  // Please don't send more that 10 values per second.
+  Blynk.virtualWrite(V5, millis() / 1000);
+}
+
+void setup()
+{
+  // Debug console
+  Serial.begin(115200);
+  pinMode(14, OUTPUT); // Initialise pin 14 as an output pin
+
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  // You can also specify server:
+  //Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass, "blynk.cloud", 80);
+  //Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass, IPAddress(__Your IP Address__), 8080);
+
+}
+// on on/off switch 
+BLYNK_WRITE(V1) // Executes when the value of virtual pin 1 changes
+{
+  if (param.asInt() == 1)
+  {
+    // execute this code if the switch widget is now ON
+    digitalWrite(14, HIGH); // Set digital pin 14 HIGH
+  }
+  else
+  {
+    // execute this code if the switch widget is now OFF
+    digitalWrite(14, LOW); // Set digital pin 14 LOW
+  }
+}
+
+// simulating a button press
+BLYNK_WRITE(V2) // Executes when the value of virtual pin 2 changes
+{
+  int seconds = param.asInt();
+
+  if (seconds > 0)
+  {
+    // execute this code if the switch widget is now ON
+    digitalWrite(14, HIGH); // Set digital pin 14 HIGH
+     timer.setTimeout(1000L, []() {
+      digitalWrite(14, LOW); // Set digital pin 14 LOW
+      Blynk.virtualWrite(V2, 0); // Turn OFF V2
+    });
+  }
+
+}
+
+void loop()
+{
+  Blynk.run();
+
+}
